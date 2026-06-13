@@ -1,0 +1,38 @@
+name: KG2281 Restock Monitor
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"   # alle 5 Minuten (UTC)
+  workflow_dispatch:         # manueller Start-Knopf + Test
+
+# Mehrfachlaeufe nicht ueberlappen lassen
+concurrency:
+  group: kg2281-monitor
+  cancel-in-progress: false
+
+permissions:
+  contents: write            # noetig, um state.json zurueckzucommitten
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Restock-Check
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+        run: python3 monitor.py
+
+      - name: State zurueckcommitten (nur bei Aenderung)
+        run: |
+          if ! git diff --quiet -- state.json; then
+            git config user.name "kg2281-monitor"
+            git config user.email "actions@github.com"
+            git add state.json
+            git commit -m "state update [skip ci]"
+            git push
+          else
+            echo "Kein State-Wechsel -- nichts zu committen."
+          fi
