@@ -56,12 +56,14 @@ SHOPS = [
         "type": "shopify",
         "fetch_url": "https://footdistrict.com/products/adidas-originals-eqt-germany-football-logo-relaxed-mens-track-jacket-kg2281.js",
         "buy_url": "https://footdistrict.com/en/products/adidas-originals-eqt-germany-football-logo-relaxed-mens-track-jacket-kg2281",
+        "note": "⚠️ 2 Stück mitnehmen → Gratisversand (frei erst ab 180 €)",
     },
     {
         "name": "Orange Jungle",
         "type": "shopify",
         "fetch_url": "https://www.orangejungle.de/products/dfb-equipment-track-top.js",
         "buy_url": "https://www.orangejungle.de/products/dfb-equipment-track-top",
+        "note": "⚠️ 2 Stück mitnehmen → Gratisversand (frei erst ab 100 €, Jacke 99,99 €)",
     },
     {
         "name": "Breuninger",
@@ -185,9 +187,12 @@ def run_once() -> None:
         if newly:
             sizes = ", ".join(newly)
             log(f"{name}: RESTOCK! Neu verfuegbar: {sizes}")
+            msg = f"🔥 adidas DFB EQT Jacke wieder da!\nGröße(n): {sizes}\nJetzt zuschlagen bei {name}"
+            if shop.get("note"):
+                msg += f"\n{shop['note']}"
             ntfy_push(
                 title=f"RESTOCK {name}: KG2281 Jacke",
-                message=f"🔥 adidas DFB EQT Jacke wieder da!\nGroesse(n): {sizes}\nJetzt zuschlagen bei {name}",
+                message=msg,
                 click_url=shop["buy_url"],
             )
         else:
