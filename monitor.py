@@ -146,6 +146,22 @@ def available_sizes(text: str, shop_type: str) -> list:
     return available_sizes_shopify(text)
 
 
+# Nur diese Groessen sollen pingen (Reseller-relevant). 2XL wird als XXL gewertet.
+WANTED_SIZES = {"M", "L", "XL", "XXL"}
+
+
+def size_in_scope(variant_title: str) -> bool:
+    """True, wenn im Varianten-Titel eine gewuenschte Groesse als eigenes Token steckt.
+    Tokenisiert ueber Nicht-Alphanumerik, damit XL nicht faelschlich in XXL matcht."""
+    for tok in re.split(r"[^A-Za-z0-9]+", variant_title):
+        t = tok.upper()
+        if t == "2XL":
+            t = "XXL"
+        if t in WANTED_SIZES:
+            return True
+    return False
+
+
 def run_once() -> None:
     state = load_state()
     new_state = {}
@@ -154,6 +170,7 @@ def run_once() -> None:
         try:
             body = http_get(shop["fetch_url"])
             avail = available_sizes(body, shop["type"])
+            avail = [s for s in avail if size_in_scope(s)]  # nur M/L/XL/XXL
         except Exception as exc:  # noqa: BLE001 -- Lauf darf nie crashen
             log(f"{name}: Fehler ({exc}) -- uebersprungen")
             if name in state:
