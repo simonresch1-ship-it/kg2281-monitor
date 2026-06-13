@@ -46,6 +46,24 @@ SHOPS = [
         "buy_url": "https://www.schrittmacher-shop.com/products/adidas-germany-eqt-track-top-equipment-green-kg2281",
     },
     {
+        "name": "Smart Dresser",
+        "type": "shopify",
+        "fetch_url": "https://www.thesmartdresser.de/products/dfb-eqt-tracktop-eqt-green.js",
+        "buy_url": "https://www.thesmartdresser.de/products/dfb-eqt-tracktop-eqt-green",
+    },
+    {
+        "name": "footdistrict",
+        "type": "shopify",
+        "fetch_url": "https://footdistrict.com/products/adidas-originals-eqt-germany-football-logo-relaxed-mens-track-jacket-kg2281.js",
+        "buy_url": "https://footdistrict.com/en/products/adidas-originals-eqt-germany-football-logo-relaxed-mens-track-jacket-kg2281",
+    },
+    {
+        "name": "Orange Jungle",
+        "type": "shopify",
+        "fetch_url": "https://www.orangejungle.de/products/dfb-equipment-track-top.js",
+        "buy_url": "https://www.orangejungle.de/products/dfb-equipment-track-top",
+    },
+    {
         "name": "Breuninger",
         "type": "breuninger",
         "fetch_url": "https://www.breuninger.com/de/marken/adidas/trainingsjacke-equipment-tt/1003077483/p/?variant=209ffbd7d7a540838023de0d0b3dc3f2",
