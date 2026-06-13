@@ -4,6 +4,11 @@ on:
   schedule:
     - cron: "*/5 * * * *"   # alle 5 Minuten (UTC)
   workflow_dispatch:         # manueller Start-Knopf + Test
+    inputs:
+      test:
+        description: "Test-Push senden statt echtem Check"
+        type: boolean
+        default: false
 
 # Mehrfachlaeufe nicht ueberlappen lassen
 concurrency:
@@ -23,7 +28,7 @@ jobs:
       - name: Restock-Check
         env:
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
-        run: python3 monitor.py
+        run: python3 monitor.py ${{ (github.event_name == 'workflow_dispatch' && inputs.test) && '--test' || '' }}
 
       - name: State zurueckcommitten (nur bei Aenderung)
         run: |
