@@ -1,8 +1,13 @@
 name: KG2281 Restock Monitor
 
+# Strategie: GitHubs Schedule ist unzuverlaessig/gedrosselt. Deshalb laeuft EIN Job
+# ~5 Stunden lang und prueft intern alle 60s. Die crons sind nur Zuend-Funken alle 3h;
+# dank concurrency (kein Overlap) haengt sich der naechste Job nahtlos an den vorigen an,
+# sodass praktisch durchgehende ~60s-Abdeckung entsteht -- auch ohne dass GitHub haeufig zuendet.
+
 on:
   schedule:
-    - cron: "0 * * * *"    # stuendlich angestossen; der Job selbst loopt dann ~55 Min
+    - cron: "0 */3 * * *"   # alle 3h ein Zuendversuch (UTC); Job selbst loopt ~5h
   workflow_dispatch:
     inputs:
       test:
@@ -10,7 +15,6 @@ on:
         type: boolean
         default: false
 
-# Laeufe nicht ueberlappen (ein 55-Min-Loop endet, bevor der naechste startet)
 concurrency:
   group: kg2281-monitor
   cancel-in-progress: false
@@ -21,7 +25,7 @@ permissions:
 jobs:
   check:
     runs-on: ubuntu-latest
-    timeout-minutes: 70
+    timeout-minutes: 310
     steps:
       - uses: actions/checkout@v4
 
@@ -32,32 +36,26 @@ jobs:
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
         run: python3 monitor.py --test
 
-      # --- Normalbetrieb: ~55 Min lang alle 60s pruefen ---
-      - name: Restock-Loop (~55 Min, alle 60s)
+      # --- Normalbetrieb: ~5h lang alle 60s pruefen ---
+      - name: Restock-Loop (~5h, alle 60s)
         if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.test) }}
         env:
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
         run: |
-          END=$((SECONDS + 3300))   # 55 Minuten
+          END=$((SECONDS + 18000))   # 5 Stunden
           n=0
           while [ $SECONDS -lt $END ]; do
             n=$((n+1))
-            echo "--- Iteration $n (t=${SECONDS}s) ---"
+            echo "--- Iteration $n (t=${SECONDS}s, $(date -u +%H:%M:%SZ)) ---"
             python3 monitor.py || true
+            # State sofort persistieren, sobald sich was aendert (gegen Doppel-Ping nach Job-Ende)
+            if ! git diff --quiet -- state.json; then
+              git config user.name "kg2281-monitor"
+              git config user.email "actions@github.com"
+              git add state.json
+              git commit -m "state update [skip ci]" || true
+              git push || (git pull --rebase -X ours origin main && git push) || true
+            fi
             sleep 60
           done
           echo "Loop fertig nach $n Iterationen."
-
-      # --- State persistieren, damit der naechste Job nicht erneut pingt ---
-      - name: State zurueckcommitten (nur bei Aenderung)
-        if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.test) }}
-        run: |
-          if ! git diff --quiet -- state.json; then
-            git config user.name "kg2281-monitor"
-            git config user.email "actions@github.com"
-            git add state.json
-            git commit -m "state update [skip ci]"
-            git push || (git pull --rebase -X ours origin main && git push)
-          else
-            echo "Kein State-Wechsel -- nichts zu committen."
-          fi
