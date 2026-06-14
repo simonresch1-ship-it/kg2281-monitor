@@ -16,7 +16,8 @@ on:
         default: false
 
 concurrency:
-  group: kg2281-monitor
+  # Test-Laeufe bekommen eine eigene Gruppe -> blockieren NICHT hinter dem laufenden 5h-Loop.
+  group: ${{ (github.event_name == 'workflow_dispatch' && inputs.test) && format('kg2281-test-{0}', github.run_id) || 'kg2281-monitor' }}
   cancel-in-progress: false
 
 permissions:
