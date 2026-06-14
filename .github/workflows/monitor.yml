@@ -1,13 +1,13 @@
 name: KG2281 Restock Monitor
 
 # Strategie: GitHubs Schedule ist unzuverlaessig/gedrosselt. Deshalb laeuft EIN Job
-# ~5 Stunden lang und prueft intern alle 60s. Die crons sind nur Zuend-Funken alle 3h;
+# ~5 Stunden lang und prueft intern alle 60s. Die crons sind nur stuendliche Zuend-Funken;
 # dank concurrency (kein Overlap) haengt sich der naechste Job nahtlos an den vorigen an,
 # sodass praktisch durchgehende ~60s-Abdeckung entsteht -- auch ohne dass GitHub haeufig zuendet.
 
 on:
   schedule:
-    - cron: "0 */3 * * *"   # alle 3h ein Zuendversuch (UTC); Job selbst loopt ~5h
+    - cron: "0 * * * *"     # stuendlich ein Zuendversuch (UTC); Job selbst loopt ~5h
   workflow_dispatch:
     inputs:
       test:
