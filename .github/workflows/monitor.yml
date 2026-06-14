@@ -2,42 +2,62 @@ name: KG2281 Restock Monitor
 
 on:
   schedule:
-    - cron: "*/5 * * * *"   # alle 5 Minuten (UTC)
-  workflow_dispatch:         # manueller Start-Knopf + Test
+    - cron: "0 * * * *"    # stuendlich angestossen; der Job selbst loopt dann ~55 Min
+  workflow_dispatch:
     inputs:
       test:
         description: "Test-Push senden statt echtem Check"
         type: boolean
         default: false
 
-# Mehrfachlaeufe nicht ueberlappen lassen
+# Laeufe nicht ueberlappen (ein 55-Min-Loop endet, bevor der naechste startet)
 concurrency:
   group: kg2281-monitor
   cancel-in-progress: false
 
 permissions:
-  contents: write            # noetig, um state.json zurueckzucommitten
+  contents: write
 
 jobs:
   check:
     runs-on: ubuntu-latest
+    timeout-minutes: 70
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Restock-Check
+      # --- Manueller Test: einmal Test-Push, kein Loop ---
+      - name: Test-Push
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.test }}
         env:
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
-        run: python3 monitor.py ${{ (github.event_name == 'workflow_dispatch' && inputs.test) && '--test' || '' }}
+        run: python3 monitor.py --test
 
+      # --- Normalbetrieb: ~55 Min lang alle 60s pruefen ---
+      - name: Restock-Loop (~55 Min, alle 60s)
+        if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.test) }}
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+        run: |
+          END=$((SECONDS + 3300))   # 55 Minuten
+          n=0
+          while [ $SECONDS -lt $END ]; do
+            n=$((n+1))
+            echo "--- Iteration $n (t=${SECONDS}s) ---"
+            python3 monitor.py || true
+            sleep 60
+          done
+          echo "Loop fertig nach $n Iterationen."
+
+      # --- State persistieren, damit der naechste Job nicht erneut pingt ---
       - name: State zurueckcommitten (nur bei Aenderung)
+        if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.test) }}
         run: |
           if ! git diff --quiet -- state.json; then
             git config user.name "kg2281-monitor"
             git config user.email "actions@github.com"
             git add state.json
             git commit -m "state update [skip ci]"
-            git push
+            git push || (git pull --rebase -X ours origin main && git push)
           else
             echo "Kein State-Wechsel -- nichts zu committen."
           fi
