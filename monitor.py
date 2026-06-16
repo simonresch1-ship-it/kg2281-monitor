@@ -71,6 +71,22 @@ SHOPS = [
         "fetch_url": "https://www.breuninger.com/de/marken/adidas/trainingsjacke-equipment-tt/1003077483/p/?variant=209ffbd7d7a540838023de0d0b3dc3f2",
         "buy_url": "https://www.breuninger.com/de/marken/adidas/trainingsjacke-equipment-tt/1003077483/p/?variant=209ffbd7d7a540838023de0d0b3dc3f2",
     },
+    # --- 2. Produkt: adidas x Willy Chavarria WCC Soccer Jersey (KU7803, gruen) ---
+    {
+        "name": "Overkill",
+        "product": "WCC Jersey (KU7803)",
+        "type": "shopify",
+        "fetch_url": "https://www.overkillshop.com/products/willy-chavarria-x-adidas-soccer-jersey-ku7803-collegiate-green.js",
+        "buy_url": "https://www.overkillshop.com/products/willy-chavarria-x-adidas-soccer-jersey-ku7803-collegiate-green",
+    },
+    {
+        "name": "footdistrict",
+        "product": "WCC Jersey (KU7803)",
+        "type": "shopify",
+        "fetch_url": "https://footdistrict.com/products/adidas-originals-x-willy-chavarria-logo-half-sleeved-oversize-mens-jersey-t-shirt-ku7803.js",
+        "buy_url": "https://footdistrict.com/en/products/adidas-originals-x-willy-chavarria-logo-half-sleeved-oversize-mens-jersey-t-shirt-ku7803",
+        "note": "ℹ️ Versand frei ab 180 € — Jersey liegt bei 180 €, ggf. knapp drunter",
+    },
 ]
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -169,34 +185,36 @@ def run_once() -> None:
     new_state = {}
     for shop in SHOPS:
         name = shop["name"]
+        product = shop.get("product", "DFB EQT Jacke (KG2281)")
+        key = f"{name}|{product}"   # eindeutig pro Produkt+Shop (kein Kollidieren)
         try:
             body = http_get(shop["fetch_url"])
             avail = available_sizes(body, shop["type"])
             avail = [s for s in avail if size_in_scope(s)]  # nur M/L/XL/XXL
         except Exception as exc:  # noqa: BLE001 -- Lauf darf nie crashen
-            log(f"{name}: Fehler ({exc}) -- uebersprungen")
-            if name in state:
-                new_state[name] = state[name]
+            log(f"{name} [{product}]: Fehler ({exc}) -- uebersprungen")
+            if key in state:
+                new_state[key] = state[key]
             continue
 
-        prev = set(state.get(name, []))
+        prev = set(state.get(key, []))
         now = set(avail)
-        new_state[name] = sorted(now)
+        new_state[key] = sorted(now)
 
         newly = sorted(now - prev)
         if newly:
             sizes = ", ".join(newly)
-            log(f"{name}: RESTOCK! Neu verfuegbar: {sizes}")
-            msg = f"🔥 adidas DFB EQT Jacke wieder da!\nGröße(n): {sizes}\nJetzt zuschlagen bei {name}"
+            log(f"{name} [{product}]: RESTOCK! Neu verfuegbar: {sizes}")
+            msg = f"🔥 {product} wieder da!\nGröße(n): {sizes}\nJetzt zuschlagen bei {name}"
             if shop.get("note"):
                 msg += f"\n{shop['note']}"
             ntfy_push(
-                title=f"RESTOCK {name}: KG2281 Jacke",
+                title=f"RESTOCK {name}: {product}",
                 message=msg,
                 click_url=shop["buy_url"],
             )
         else:
-            log(f"{name}: {', '.join(sorted(now)) if now else 'alles ausverkauft'}")
+            log(f"{name} [{product}]: {', '.join(sorted(now)) if now else 'alles ausverkauft'}")
 
     save_state(new_state)
 
