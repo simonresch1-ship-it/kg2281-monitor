@@ -96,6 +96,15 @@ SHOPS = [
         "buy_url": "https://www.breuninger.com/de/marken/adidas/aufwaermtrikot-deutschland-2026-heim/1002965160/p/?variant=66c0629853c74b3999f5b88ccac325d1",
         "note": "⚠️ Immer nur 2 Stück nehmen",
     },
+    # --- 4. Produkt: Deutschland EQT T-Shirt (nur Breuninger, ALLE Groessen) ---
+    {
+        "name": "Breuninger",
+        "product": "DE EQT T-Shirt",
+        "type": "breuninger",
+        "all_sizes": True,
+        "fetch_url": "https://www.breuninger.com/de/marken/adidas/t-shirt-deutschland-eqt/1003077482/p/?variant=eafa85cecb2747cca13a33e5e2744cab",
+        "buy_url": "https://www.breuninger.com/de/marken/adidas/t-shirt-deutschland-eqt/1003077482/p/?variant=eafa85cecb2747cca13a33e5e2744cab",
+    },
 ]
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -199,7 +208,8 @@ def run_once() -> None:
         try:
             body = http_get(shop["fetch_url"])
             avail = available_sizes(body, shop["type"])
-            avail = [s for s in avail if size_in_scope(s)]  # nur M/L/XL/XXL
+            if not shop.get("all_sizes"):
+                avail = [s for s in avail if size_in_scope(s)]  # sonst nur M/L/XL/XXL
         except Exception as exc:  # noqa: BLE001 -- Lauf darf nie crashen
             log(f"{name} [{product}]: Fehler ({exc}) -- uebersprungen")
             if key in state:
