@@ -87,6 +87,15 @@ SHOPS = [
         "buy_url": "https://footdistrict.com/en/products/adidas-originals-x-willy-chavarria-logo-half-sleeved-oversize-mens-jersey-t-shirt-ku7803",
         "note": "ℹ️ Versand frei ab 180 € — Jersey liegt bei 180 €, ggf. knapp drunter",
     },
+    # --- 3. Produkt: Deutschland Aufwaermtrikot 2026 Heim (nur Breuninger, M-XXL) ---
+    {
+        "name": "Breuninger",
+        "product": "DE Aufwärmtrikot 2026 Heim",
+        "type": "breuninger",
+        "fetch_url": "https://www.breuninger.com/de/marken/adidas/aufwaermtrikot-deutschland-2026-heim/1002965160/p/?variant=66c0629853c74b3999f5b88ccac325d1",
+        "buy_url": "https://www.breuninger.com/de/marken/adidas/aufwaermtrikot-deutschland-2026-heim/1002965160/p/?variant=66c0629853c74b3999f5b88ccac325d1",
+        "note": "⚠️ Immer nur 2 Stück nehmen",
+    },
 ]
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
