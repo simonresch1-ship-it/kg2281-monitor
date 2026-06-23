@@ -96,14 +96,24 @@ SHOPS = [
         "buy_url": "https://www.breuninger.com/de/marken/adidas/aufwaermtrikot-deutschland-2026-heim/1002965160/p/?variant=66c0629853c74b3999f5b88ccac325d1",
         "note": "⚠️ Immer nur 2 Stück nehmen",
     },
-    # --- 4. Produkt: Deutschland EQT T-Shirt (nur Breuninger, ALLE Groessen) ---
+    # --- 4. Produkt: Deutschland EQT T-Shirt (nur Breuninger, ALLE Groessen, je Farbe getrennt) ---
     {
         "name": "Breuninger",
-        "product": "DE EQT T-Shirt",
+        "product": "DE EQT T-Shirt grün",
         "type": "breuninger",
         "all_sizes": True,
+        "color_id": "eafa85cecb2747cca13a33e5e2744cab",
         "fetch_url": "https://www.breuninger.com/de/marken/adidas/t-shirt-deutschland-eqt/1003077482/p/?variant=eafa85cecb2747cca13a33e5e2744cab",
         "buy_url": "https://www.breuninger.com/de/marken/adidas/t-shirt-deutschland-eqt/1003077482/p/?variant=eafa85cecb2747cca13a33e5e2744cab",
+    },
+    {
+        "name": "Breuninger",
+        "product": "DE EQT T-Shirt schwarz",
+        "type": "breuninger",
+        "all_sizes": True,
+        "color_id": "11f97b976f934e28a3a14c445f1b93f7",
+        "fetch_url": "https://www.breuninger.com/de/marken/adidas/t-shirt-deutschland-eqt/1003077482/p/?variant=11f97b976f934e28a3a14c445f1b93f7",
+        "buy_url": "https://www.breuninger.com/de/marken/adidas/t-shirt-deutschland-eqt/1003077482/p/?variant=11f97b976f934e28a3a14c445f1b93f7",
     },
 ]
 
@@ -167,18 +177,46 @@ def available_sizes_shopify(text: str) -> list:
     return [v.get("title", "?") for v in data.get("variants", []) if v.get("available")]
 
 
-def available_sizes_breuninger(text: str) -> list:
-    txt = ihtml.unescape(text)
+def _breuninger_colors(txt: str) -> list:
+    """Extrahiert das eingebettete "colors":[...]-Array als echtes JSON (Klammer-Balance)."""
+    i = txt.find('"colors":[')
+    if i == -1:
+        return []
+    start = txt.find('[', i)
+    depth = 0
+    for j in range(start, len(txt)):
+        if txt[j] == '[':
+            depth += 1
+        elif txt[j] == ']':
+            depth -= 1
+            if depth == 0:
+                try:
+                    return json.loads(txt[start:j + 1])
+                except json.JSONDecodeError:
+                    return []
+    return []
+
+
+def available_sizes_breuninger(text: str, color_id: str = None) -> list:
+    """stock>0 = verfuegbar. Bei mehrfarbigen Produkten auf color_id einschraenken,
+    sonst Farben vermischt. color_id None = alle Farb-Bloecke (einfarbige Produkte)."""
+    colors = _breuninger_colors(ihtml.unescape(text))
     out = []
-    for m in re.finditer(r'"size"\s*:\s*"([^"]+)"\s*,\s*"stock"\s*:\s*(\d+)', txt):
-        if int(m.group(2)) > 0:
-            out.append(m.group(1))
+    for c in colors:
+        if color_id and c.get("colorId") != color_id:
+            continue
+        for s in c.get("sizes", []):
+            try:
+                if int(s.get("stock", 0)) > 0:
+                    out.append(s.get("size", "?"))
+            except (TypeError, ValueError):
+                pass
     return sorted(set(out))
 
 
-def available_sizes(text: str, shop_type: str) -> list:
+def available_sizes(text: str, shop_type: str, color_id: str = None) -> list:
     if shop_type == "breuninger":
-        return available_sizes_breuninger(text)
+        return available_sizes_breuninger(text, color_id)
     return available_sizes_shopify(text)
 
 
@@ -207,7 +245,7 @@ def run_once() -> None:
         key = f"{name}|{product}"   # eindeutig pro Produkt+Shop (kein Kollidieren)
         try:
             body = http_get(shop["fetch_url"])
-            avail = available_sizes(body, shop["type"])
+            avail = available_sizes(body, shop["type"], shop.get("color_id"))
             if not shop.get("all_sizes"):
                 avail = [s for s in avail if size_in_scope(s)]  # sonst nur M/L/XL/XXL
         except Exception as exc:  # noqa: BLE001 -- Lauf darf nie crashen
