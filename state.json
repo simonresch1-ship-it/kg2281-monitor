@@ -9,6 +9,10 @@
   "Overkill|WCC Jersey (KU7803)": [],
   "footdistrict|WCC Jersey (KU7803)": [],
   "Breuninger|DE Aufwärmtrikot 2026 Heim": [],
-  "Breuninger|DE EQT T-Shirt grün": [],
+  "Breuninger|DE EQT T-Shirt grün": [
+    "L = 52",
+    "M = 50",
+    "XL = 54"
+  ],
   "Breuninger|DE EQT T-Shirt schwarz": []
 }
