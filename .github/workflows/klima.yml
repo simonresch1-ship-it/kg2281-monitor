@@ -1,0 +1,57 @@
+name: OBI Klima Monitor
+
+# Eigener 24/7-Monitor fuer die Midea PortaSplit Klimageraete (OBI-API, cloud-faehig).
+# Wie der Apparel-Monitor: ein Job loopt ~5h und prueft intern alle 90s; stuendlicher
+# cron als Zuend-Funke, concurrency haengt den naechsten Job nahtlos an.
+
+on:
+  schedule:
+    - cron: "0 * * * *"
+  workflow_dispatch:
+    inputs:
+      test:
+        description: "Test-Push senden statt echtem Check"
+        type: boolean
+        default: false
+
+concurrency:
+  group: ${{ (github.event_name == 'workflow_dispatch' && inputs.test) && format('kg2281-klima-test-{0}', github.run_id) || 'kg2281-klima' }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 310
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Test-Push
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.test }}
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+        run: python3 klima_monitor.py --test
+
+      - name: Klima-Loop (~5h, alle 90s)
+        if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.test) }}
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+        run: |
+          END=$((SECONDS + 18000))
+          n=0
+          while [ $SECONDS -lt $END ]; do
+            n=$((n+1))
+            echo "--- Klima-Iteration $n (t=${SECONDS}s, $(date -u +%H:%M:%SZ)) ---"
+            python3 klima_monitor.py || true
+            if ! git diff --quiet -- klima_state.json; then
+              git config user.name "kg2281-monitor"
+              git config user.email "actions@github.com"
+              git add klima_state.json
+              git commit -m "klima state update [skip ci]" || true
+              git push || (git pull --rebase -X ours origin main && git push) || true
+            fi
+            sleep 90
+          done
+          echo "Klima-Loop fertig nach $n Iterationen."
