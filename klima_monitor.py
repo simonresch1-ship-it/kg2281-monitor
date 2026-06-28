@@ -27,9 +27,38 @@ PRODUCTS = [
     {"name": "Midea PortaSplit 12.000 BTU", "sku": "8620890",
      "url": "https://www.obi.de/p/8620890/midea-mobile-split-klimaanlage-portasplit"},
 ]
-REGIONS = [
-    {"plz": "85049", "label": "Ingolstadt"},
-    {"plz": "80331", "label": "Muenchen"},
+# Alle OBI-Maerkte auf der Achse Nuernberg <-> Ingolstadt <-> Muenchen (+ Rand).
+# Jeder Markt wird ueber seine eigene PLZ abgefragt; Treffer-Match ueber storeId ODER PLZ
+# im pickupStores-Rohtext (strukturagnostisch). Quelle: OBI store-locator country/de.
+STORES = [
+    {"id": "276", "zip": "91207", "name": "Lauf"},
+    {"id": "146", "zip": "91224", "name": "Pommelsbrunn"},
+    {"id": "152", "zip": "92237", "name": "Sulzbach-Rosenberg"},
+    {"id": "175", "zip": "90766", "name": "Fuerth"},
+    {"id": "324", "zip": "90552", "name": "Roethenbach"},
+    {"id": "351", "zip": "90411", "name": "Nuernberg Aeuss. Bayreuther Str."},
+    {"id": "125", "zip": "90431", "name": "Nuernberg Leyher Strasse"},
+    {"id": "235", "zip": "92224", "name": "Amberg"},
+    {"id": "391", "zip": "90480", "name": "Nuernberg Regensburger Strasse"},
+    {"id": "165", "zip": "90592", "name": "Schwarzenbruck"},
+    {"id": "136", "zip": "91126", "name": "Schwabach"},
+    {"id": "304", "zip": "92318", "name": "Neumarkt"},
+    {"id": "334", "zip": "91154", "name": "Roth"},
+    {"id": "191", "zip": "91171", "name": "Greding"},
+    {"id": "144", "zip": "91781", "name": "Weissenburg"},
+    {"id": "180", "zip": "85072", "name": "Eichstaett"},
+    {"id": "261", "zip": "93326", "name": "Abensberg"},
+    {"id": "484", "zip": "86633", "name": "Neuburg"},
+    {"id": "301", "zip": "86551", "name": "Aichach"},
+    {"id": "401", "zip": "86391", "name": "Stadtbergen (Augsburg)"},
+    {"id": "268", "zip": "85221", "name": "Dachau"},
+    {"id": "390", "zip": "85599", "name": "Parsdorf"},
+    {"id": "244", "zip": "81243", "name": "Muenchen Neuaubing"},
+    {"id": "445", "zip": "81929", "name": "Muenchen-Daglfing"},
+    {"id": "190", "zip": "80686", "name": "Muenchen-Westend"},
+    {"id": "248", "zip": "81827", "name": "Muenchen Trudering"},
+    {"id": "357", "zip": "82152", "name": "Muenchen-Martinsried"},
+    {"id": "447", "zip": "86899", "name": "Landsberg am Lech"},
 ]
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -80,57 +109,47 @@ def save_state(state):
         json.dump(state, fh, ensure_ascii=False, indent=2)
 
 
-def store_names(pickup_stores):
-    """Beste-Muehe-Extraktion der Marktnamen (Feldnamen variieren -> mehrere Kandidaten)."""
-    out = []
-    for s in pickup_stores:
-        if not isinstance(s, dict):
-            continue
-        name = (s.get("name") or s.get("storeName") or s.get("displayName")
-                or s.get("market") or s.get("city") or s.get("town") or "Markt")
-        out.append(str(name))
-    return out
-
-
 def run_once():
     state = load_state()
-    new_state = dict(state)  # Online-/Regions-Keys einzeln aktualisieren
+    new_state = dict(state)
 
     for p in PRODUCTS:
         sku, name = p["sku"], p["name"]
         online_available = False
+        matched = []            # Maerkte mit Bestand (sicherer Match)
+        unmatched_raw = None    # pickupStores nicht-leer, aber kein Store-Match -> zum Verfeinern loggen
 
-        for region in REGIONS:
-            plz, label = region["plz"], region["label"]
-            url = f"https://www.obi.de/api/pdp/v1/availability/{sku}?postalCode={plz}&quantity=1&lang=de-DE"
+        for store in STORES:
+            url = f"https://www.obi.de/api/pdp/v1/availability/{sku}?postalCode={store['zip']}&quantity=1&lang=de-DE"
             try:
                 data = http_get_json(url)
             except Exception as exc:  # noqa: BLE001 -- Lauf darf nie crashen
-                log(f"{name} [{label}]: Fehler ({exc}) -- uebersprungen")
+                log(f"{name} [{store['name']}]: Fehler ({exc})")
+                # alten Zustand fuer diesen Markt behalten
                 continue
 
             if data.get("deliveryDataPerSeller"):
                 online_available = True
 
             pickup = data.get("pickupStores") or []
-            key = f"{sku}|{plz}"
-            prev = set(state.get(key, []))
-            names = store_names(pickup)
-            now = set(names)
-            new_state[key] = sorted(now)
+            skey = f"{sku}|store|{store['id']}"
+            has_stock = False
+            if pickup:
+                raw = json.dumps(pickup, ensure_ascii=False)
+                if store["id"] in raw or store["zip"] in raw:
+                    has_stock = True
+                else:
+                    unmatched_raw = raw[:500]
 
-            newly = sorted(now - prev)
-            if newly:
-                log(f"{name} [{label}]: MARKT-RESTOCK! {', '.join(newly)} | roh: {json.dumps(pickup)[:300]}")
+            prev = bool(state.get(skey))
+            new_state[skey] = [store["name"]] if has_stock else []
+            if has_stock and not prev:
+                log(f"{name}: MARKT-RESTOCK {store['name']}!")
                 ntfy_push(
-                    f"KLIMA Markt {label}: {name}",
-                    f"❄️🔥 {name} im Markt verfuegbar ({label})!\nMarkt/Markt(e): {', '.join(newly)}\nReservieren & abholen → OBI",
+                    f"KLIMA Markt {store['name']}",
+                    f"❄️🔥 {name} im OBI {store['name']} verfuegbar!\nReservieren & abholen → OBI",
                     p["url"],
                 )
-            elif now:
-                log(f"{name} [{label}]: Markt-Bestand: {', '.join(sorted(now))}")
-            else:
-                log(f"{name} [{label}]: kein Markt-Bestand")
 
         # Online-Status (produktweit)
         okey = f"{sku}|online"
@@ -143,10 +162,11 @@ def run_once():
                 f"❄️🔥 {name} ist ONLINE wieder lieferbar bei OBI!\nJetzt bestellen → OBI",
                 p["url"],
             )
-        elif online_available:
-            log(f"{name}: online lieferbar")
-        else:
-            log(f"{name}: online nicht lieferbar")
+
+        n_markets = sum(1 for k, v in new_state.items() if k.startswith(f"{sku}|store|") and v)
+        log(f"{name}: online={'JA' if online_available else 'nein'} | Maerkte mit Bestand: {n_markets}")
+        if unmatched_raw:
+            log(f"{name}: HINWEIS pickupStores nicht-leer ohne Store-Match -> RAW: {unmatched_raw}")
 
     save_state(new_state)
 

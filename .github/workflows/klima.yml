@@ -34,7 +34,7 @@ jobs:
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
         run: python3 klima_monitor.py --test
 
-      - name: Klima-Loop (~5h, alle 90s)
+      - name: Klima-Loop (~5h, alle 4 Min)
         if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.test) }}
         env:
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
@@ -52,6 +52,6 @@ jobs:
               git commit -m "klima state update [skip ci]" || true
               git push || (git pull --rebase -X ours origin main && git push) || true
             fi
-            sleep 90
+            sleep 240
           done
           echo "Klima-Loop fertig nach $n Iterationen."
