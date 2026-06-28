@@ -12,6 +12,7 @@ Ping per ntfy NUR beim Uebergang "nicht da -> da". State in klima_state.json.
 NTFY_TOPIC aus Umgebung (GitHub-Secret).
 """
 
+import gzip
 import json
 import os
 import urllib.request
@@ -61,6 +62,24 @@ STORES = [
     {"id": "447", "zip": "86899", "name": "Landsberg am Lech"},
 ]
 
+# --- toom: andere API (api.toom.de). sap_id != sku! Geraete sind "nicht online bestellbar"
+# -> reine Markt-Play. buyboxcases-POST prueft ALLE Maerkte in EINER Anfrage. ---
+TOOM_PRODUCTS = [
+    {"name": "Midea PortaSplit Cool 8.000 BTU", "sap_id": "10515238",
+     "url": "https://toom.de/p/split-klimaanlage-portasplit-cool-8000btuh/10515238"},
+    {"name": "Midea PortaSplit 12.000 BTU", "sap_id": "10272593",
+     "url": "https://toom.de/p/mobiles-klimageraet-portasplit-12000-btuh/9350668"},
+]
+TOOM_MARKETS = [
+    {"id": 3609, "name": "Neumarkt"},
+    {"id": 3542, "name": "Burglengenfeld"},
+    {"id": 3097, "name": "Regensburg-Königswiesen"},
+    {"id": 3600, "name": "München-Moosach"},
+    {"id": 3603, "name": "Fürstenfeldbruck"},
+    {"id": 3601, "name": "München-Neuaubing"},
+    {"id": 3602, "name": "München-Haidhausen"},
+]
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 STATE_FILE = os.path.join(BASE_DIR, "klima_state.json")
 UA = ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
@@ -75,6 +94,21 @@ def http_get_json(url, timeout=20):
     req = urllib.request.Request(url, headers={"User-Agent": UA, "Accept": "application/json"})
     with urllib.request.urlopen(req, timeout=timeout) as resp:
         return json.loads(resp.read().decode("utf-8", errors="replace"))
+
+
+def http_json(url, data=None, timeout=20):
+    """GET (data=None) oder POST (data=Objekt -> JSON-Body). Behandelt gzip (toom liefert gzip)."""
+    headers = {"User-Agent": UA, "Accept": "application/json", "Accept-Encoding": "gzip"}
+    payload = None
+    if data is not None:
+        headers["Content-Type"] = "application/json"
+        payload = json.dumps(data).encode("utf-8")
+    req = urllib.request.Request(url, data=payload, headers=headers)
+    with urllib.request.urlopen(req, timeout=timeout) as resp:
+        raw = resp.read()
+        if resp.headers.get("Content-Encoding") == "gzip":
+            raw = gzip.decompress(raw)
+        return json.loads(raw.decode("utf-8", errors="replace"))
 
 
 def ntfy_push(title, message, click_url):
@@ -109,10 +143,7 @@ def save_state(state):
         json.dump(state, fh, ensure_ascii=False, indent=2)
 
 
-def run_once():
-    state = load_state()
-    new_state = dict(state)
-
+def check_obi(state, new_state):
     for p in PRODUCTS:
         sku, name = p["sku"], p["name"]
         online_available = False
@@ -168,6 +199,62 @@ def run_once():
         if unmatched_raw:
             log(f"{name}: HINWEIS pickupStores nicht-leer ohne Store-Match -> RAW: {unmatched_raw}")
 
+
+def check_toom(state, new_state):
+    for p in TOOM_PRODUCTS:
+        sap, name = p["sap_id"], p["name"]
+
+        # Markt-Verfuegbarkeit: EIN POST fuer alle Maerkte. state != "unavailable" = Bestand.
+        body = [{"market_id": m["id"], "sap_id": sap} for m in TOOM_MARKETS]
+        try:
+            res = http_json("https://api.toom.de/public/v1/buyboxcases", data=body)
+        except Exception as exc:  # noqa: BLE001
+            log(f"toom {name}: buyboxcases-Fehler ({exc})")
+            res = []
+        st_by_market = {r.get("market_id"): r.get("state") for r in res if isinstance(r, dict)}
+
+        for m in TOOM_MARKETS:
+            st = st_by_market.get(m["id"])
+            available = st is not None and st != "unavailable"
+            skey = f"toom|{sap}|store|{m['id']}"
+            prev = bool(state.get(skey))
+            new_state[skey] = [m["name"]] if available else []
+            if available and not prev:
+                log(f"toom {name}: MARKT-RESTOCK {m['name']} (state={st})")
+                ntfy_push(
+                    f"KLIMA toom {m['name']}",
+                    f"❄️🔥 {name} im toom {m['name']} verfügbar!\nReservieren & abholen → toom",
+                    p["url"],
+                )
+
+        # Online (jsonview deliver.state); diese Geraete sind meist "not purchasable online"
+        online = False
+        try:
+            jv = http_json(f"https://api.toom.de/public/v1/jsonview/{sap}/{TOOM_MARKETS[0]['id']}")
+            dstate = (jv.get("deliver") or {}).get("state", "")
+            online = dstate not in ("not purchasable online", "unavailable", "")
+        except Exception as exc:  # noqa: BLE001
+            log(f"toom {name}: jsonview-Fehler ({exc})")
+        okey = f"toom|{sap}|online"
+        prev_online = bool(state.get(okey))
+        new_state[okey] = ["online"] if online else []
+        if online and not prev_online:
+            log(f"toom {name}: ONLINE-RESTOCK!")
+            ntfy_push(
+                f"KLIMA ONLINE toom: {name}",
+                f"❄️🔥 {name} ist ONLINE bei toom lieferbar!\nJetzt bestellen → toom",
+                p["url"],
+            )
+
+        n = sum(1 for k, v in new_state.items() if k.startswith(f"toom|{sap}|store|") and v)
+        log(f"toom {name}: online={'JA' if online else 'nein'} | Maerkte mit Bestand: {n}")
+
+
+def run_once():
+    state = load_state()
+    new_state = dict(state)
+    check_obi(state, new_state)
+    check_toom(state, new_state)
     save_state(new_state)
 
 
