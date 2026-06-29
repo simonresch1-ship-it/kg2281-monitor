@@ -223,6 +223,10 @@ def available_sizes(text: str, shop_type: str, color_id: str = None) -> list:
 # Nur diese Groessen sollen pingen (Reseller-relevant). 2XL wird als XXL gewertet.
 WANTED_SIZES = {"M", "L", "XL", "XXL"}
 
+# Temporaer stummgeschaltete Produkte: werden weiter geprueft (State bleibt aktuell),
+# aber KEIN ntfy-Push. Zum Reaktivieren einfach aus dem Set entfernen.
+MUTED_PRODUCTS = {"DFB EQT Jacke (KG2281)"}
+
 
 def size_in_scope(variant_title: str) -> bool:
     """True, wenn im Varianten-Titel eine gewuenschte Groesse als eigenes Token steckt.
@@ -259,7 +263,9 @@ def run_once() -> None:
         new_state[key] = sorted(now)
 
         newly = sorted(now - prev)
-        if newly:
+        if newly and product in MUTED_PRODUCTS:
+            log(f"{name} [{product}]: RESTOCK {', '.join(newly)} -- STUMM (kein Push)")
+        elif newly:
             sizes = ", ".join(newly)
             log(f"{name} [{product}]: RESTOCK! Neu verfuegbar: {sizes}")
             msg = f"🔥 {product} wieder da!\nGröße(n): {sizes}\nJetzt zuschlagen bei {name}"
