@@ -132,6 +132,15 @@ SHOPS = [
         "fetch_url": "https://www.breuninger.com/de/marken/adidas/heimtrikot-mexiko-26/1002965118/p/?variant=78afb44479494b38bccc48582abf1779",
         "buy_url": "https://www.breuninger.com/de/marken/adidas/heimtrikot-mexiko-26/1002965118/p/?variant=78afb44479494b38bccc48582abf1779",
     },
+    # --- 7. Produkt: Mexiko Authentic Ausweichtrikot (nur XL/XXL/3XL) ---
+    {
+        "name": "Breuninger",
+        "product": "MEXIKO 26 Authentic Ausweichtrikot",
+        "type": "breuninger",
+        "sizes": ["XL", "XXL", "3XL"],
+        "fetch_url": "https://www.breuninger.com/de/marken/adidas/mexiko-26-authentic-ausweichtrikot/1003382837/p/?variant=b140707b6a304942876a7abc3862c91d",
+        "buy_url": "https://www.breuninger.com/de/marken/adidas/mexiko-26-authentic-ausweichtrikot/1003382837/p/?variant=b140707b6a304942876a7abc3862c91d",
+    },
 ]
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -251,14 +260,16 @@ MUTED_PRODUCTS = {
 }
 
 
-def size_in_scope(variant_title: str) -> bool:
+def size_in_scope(variant_title: str, wanted=None) -> bool:
     """True, wenn im Varianten-Titel eine gewuenschte Groesse als eigenes Token steckt.
+    `wanted` = produktspezifische Groessen-Menge (sonst globaler WANTED_SIZES-Filter).
     Tokenisiert ueber Nicht-Alphanumerik, damit XL nicht faelschlich in XXL matcht."""
+    allowed = {w.upper() for w in wanted} if wanted else WANTED_SIZES
     for tok in re.split(r"[^A-Za-z0-9]+", variant_title):
         t = tok.upper()
         if t == "2XL":
             t = "XXL"
-        if t in WANTED_SIZES:
+        if t in allowed:
             return True
     return False
 
@@ -274,7 +285,7 @@ def run_once() -> None:
             body = http_get(shop["fetch_url"])
             avail = available_sizes(body, shop["type"], shop.get("color_id"))
             if not shop.get("all_sizes"):
-                avail = [s for s in avail if size_in_scope(s)]  # sonst nur M/L/XL/XXL
+                avail = [s for s in avail if size_in_scope(s, shop.get("sizes"))]  # produktspez. sonst M/L/XL/XXL
         except Exception as exc:  # noqa: BLE001 -- Lauf darf nie crashen
             log(f"{name} [{product}]: Fehler ({exc}) -- uebersprungen")
             if key in state:
