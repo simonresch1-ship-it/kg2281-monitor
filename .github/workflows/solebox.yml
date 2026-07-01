@@ -1,0 +1,55 @@
+name: Solebox Drop Monitor
+
+# 24/7-Drop-Monitor fuer solebox (kein Mac noetig). Ein Job loopt ~5h und prueft intern
+# alle 12s; stuendlicher cron als Zuend-Funke, concurrency haengt den naechsten nahtlos an.
+
+on:
+  schedule:
+    - cron: "0 * * * *"
+  workflow_dispatch:
+    inputs:
+      test:
+        description: "Test-Push senden"
+        type: boolean
+        default: false
+
+concurrency:
+  group: ${{ (github.event_name == 'workflow_dispatch' && inputs.test) && format('sbx-test-{0}', github.run_id) || 'sbx-monitor' }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 310
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Test-Push
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.test }}
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+        run: python3 solebox_monitor.py --test
+
+      - name: Solebox-Loop (~5h, alle 12s)
+        if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.test) }}
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+        run: |
+          END=$((SECONDS + 18000))
+          n=0
+          while [ $SECONDS -lt $END ]; do
+            n=$((n+1))
+            python3 solebox_monitor.py || true
+            if ! git diff --quiet -- solebox_state.json; then
+              git config user.name "kg2281-monitor"
+              git config user.email "actions@github.com"
+              git add solebox_state.json
+              git commit -m "solebox state [skip ci]" || true
+              git push || (git pull --rebase -X ours origin main && git push) || true
+            fi
+            sleep 12
+          done
+          echo "Solebox-Loop fertig nach $n Iterationen."
