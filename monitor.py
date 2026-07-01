@@ -115,6 +115,23 @@ SHOPS = [
         "fetch_url": "https://www.breuninger.com/de/marken/adidas/t-shirt-deutschland-eqt/1003077482/p/?variant=11f97b976f934e28a3a14c445f1b93f7",
         "buy_url": "https://www.breuninger.com/de/marken/adidas/t-shirt-deutschland-eqt/1003077482/p/?variant=11f97b976f934e28a3a14c445f1b93f7",
     },
+    # --- 5.+6. Produkt: adidas Mexico Trikots (nur Breuninger, einfarbig, ALLE Groessen) ---
+    {
+        "name": "Breuninger",
+        "product": "MEXICO Ausweichtrikot 2026",
+        "type": "breuninger",
+        "all_sizes": True,
+        "fetch_url": "https://www.breuninger.com/de/marken/adidas/ausweichtrikot-mexico-2026/1003241940/p/?variant=75b963d494f74f778a441c6da4baefed",
+        "buy_url": "https://www.breuninger.com/de/marken/adidas/ausweichtrikot-mexico-2026/1003241940/p/?variant=75b963d494f74f778a441c6da4baefed",
+    },
+    {
+        "name": "Breuninger",
+        "product": "MEXIKO Heimtrikot 26",
+        "type": "breuninger",
+        "all_sizes": True,
+        "fetch_url": "https://www.breuninger.com/de/marken/adidas/heimtrikot-mexiko-26/1002965118/p/?variant=78afb44479494b38bccc48582abf1779",
+        "buy_url": "https://www.breuninger.com/de/marken/adidas/heimtrikot-mexiko-26/1002965118/p/?variant=78afb44479494b38bccc48582abf1779",
+    },
 ]
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
