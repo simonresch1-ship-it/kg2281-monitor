@@ -121,6 +121,7 @@ SHOPS = [
         "product": "MEXICO Ausweichtrikot 2026",
         "type": "breuninger",
         "all_sizes": True,
+        "max_price_cents": 6999,  # nur pingen, wenn <= 69,99 EUR (nicht zum 100-EUR-Listenpreis)
         "fetch_url": "https://www.breuninger.com/de/marken/adidas/ausweichtrikot-mexico-2026/1003241940/p/?variant=75b963d494f74f778a441c6da4baefed",
         "buy_url": "https://www.breuninger.com/de/marken/adidas/ausweichtrikot-mexico-2026/1003241940/p/?variant=75b963d494f74f778a441c6da4baefed",
     },
@@ -246,6 +247,17 @@ def available_sizes(text: str, shop_type: str, color_id: str = None) -> list:
     return available_sizes_shopify(text)
 
 
+def breuninger_price_cents(text: str):
+    """Effektiver Preis (in Cent) des ERSTEN Preis-Blocks = primaere Preiskomponente
+    des Hauptprodukts. `schemaPriceInCents` spiegelt den aktiven Preis wider (bei
+    Sale = redPrice, sonst blackPrice). None, wenn nicht gefunden. Fuer Preisfilter."""
+    m = re.search(
+        r'"price":\{"blackPrice":"[^"]*?"(?:,"redPrice":"[^"]*?")?[^}]*?"schemaPriceInCents":(\d+)',
+        ihtml.unescape(text),
+    )
+    return int(m.group(1)) if m else None
+
+
 # Nur diese Groessen sollen pingen (Reseller-relevant). 2XL wird als XXL gewertet.
 WANTED_SIZES = {"M", "L", "XL", "XXL"}
 
@@ -256,6 +268,7 @@ MUTED_PRODUCTS = {
     "DFB EQT Jacke (KG2281)",
     "DE EQT T-Shirt grün",
     "DE EQT T-Shirt schwarz",
+    "DE Aufwärmtrikot 2026 Heim",
 }
 
 
@@ -280,11 +293,24 @@ def run_once() -> None:
         name = shop["name"]
         product = shop.get("product", "DFB EQT Jacke (KG2281)")
         key = f"{name}|{product}"   # eindeutig pro Produkt+Shop (kein Kollidieren)
+        price_suffix = ""
         try:
             body = http_get(shop["fetch_url"])
             avail = available_sizes(body, shop["type"], shop.get("color_id"))
             if not shop.get("all_sizes"):
                 avail = [s for s in avail if size_in_scope(s, shop.get("sizes"))]  # produktspez. sonst M/L/XL/XXL
+            # Preisfilter: nur pingen, wenn Preis <= Zielpreis. Sonst avail leeren,
+            # damit ein spaeterer Preis-Sturz (Groesse schon da, aber teurer) als neuer Treffer zaehlt.
+            if shop.get("max_price_cents") is not None:
+                cents = breuninger_price_cents(body)
+                if cents is None or cents > shop["max_price_cents"]:
+                    if avail:
+                        pr = (f"{cents/100:.2f}".replace(".", ",") + " €") if cents else "unbekannt"
+                        log(f"{name} [{product}]: verfuegbar ({', '.join(avail)}), aber Preis {pr} > "
+                            f"Ziel {shop['max_price_cents']/100:.2f} € -- kein Push")
+                    avail = []
+                else:
+                    price_suffix = "\nPreis: " + f"{cents/100:.2f}".replace(".", ",") + " €"
         except Exception as exc:  # noqa: BLE001 -- Lauf darf nie crashen
             log(f"{name} [{product}]: Fehler ({exc}) -- uebersprungen")
             if key in state:
@@ -302,6 +328,8 @@ def run_once() -> None:
             sizes = ", ".join(newly)
             log(f"{name} [{product}]: RESTOCK! Neu verfuegbar: {sizes}")
             msg = f"🔥 {product} wieder da!\nGröße(n): {sizes}\nJetzt zuschlagen bei {name}"
+            if price_suffix:
+                msg += price_suffix
             if shop.get("note"):
                 msg += f"\n{shop['note']}"
             ntfy_push(
