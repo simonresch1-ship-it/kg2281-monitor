@@ -92,9 +92,9 @@ SHOPS = [
         "name": "Breuninger",
         "product": "DE Aufwärmtrikot 2026 Heim",
         "type": "breuninger",
+        "sizes": ["XXL", "2XL"],
         "fetch_url": "https://www.breuninger.com/de/marken/adidas/aufwaermtrikot-deutschland-2026-heim/1002965160/p/?variant=66c0629853c74b3999f5b88ccac325d1",
         "buy_url": "https://www.breuninger.com/de/marken/adidas/aufwaermtrikot-deutschland-2026-heim/1002965160/p/?variant=66c0629853c74b3999f5b88ccac325d1",
-        "note": "⚠️ Immer nur 2 Stück nehmen",
     },
     # --- 4. Produkt: Deutschland EQT T-Shirt (nur Breuninger, ALLE Groessen, je Farbe getrennt) ---
     {
@@ -254,7 +254,6 @@ WANTED_SIZES = {"M", "L", "XL", "XXL"}
 # (WCC Jersey / Willy Chavarria bleibt BEWUSST aktiv.)
 MUTED_PRODUCTS = {
     "DFB EQT Jacke (KG2281)",
-    "DE Aufwärmtrikot 2026 Heim",
     "DE EQT T-Shirt grün",
     "DE EQT T-Shirt schwarz",
 }
