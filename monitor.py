@@ -121,7 +121,7 @@ SHOPS = [
         "product": "MEXICO Ausweichtrikot 2026",
         "type": "breuninger",
         "all_sizes": True,
-        "max_price_cents": 6999,  # nur pingen, wenn <= 69,99 EUR (nicht zum 100-EUR-Listenpreis)
+        "max_price_cents": 6999,  # nur pingen, wenn Buy-Box <= 69,99 EUR = Breuninger-eigen (nicht Partner-Angebot adidas 100 EUR)
         "fetch_url": "https://www.breuninger.com/de/marken/adidas/ausweichtrikot-mexico-2026/1003241940/p/?variant=75b963d494f74f778a441c6da4baefed",
         "buy_url": "https://www.breuninger.com/de/marken/adidas/ausweichtrikot-mexico-2026/1003241940/p/?variant=75b963d494f74f778a441c6da4baefed",
     },
@@ -248,9 +248,14 @@ def available_sizes(text: str, shop_type: str, color_id: str = None) -> list:
 
 
 def breuninger_price_cents(text: str):
-    """Effektiver Preis (in Cent) des ERSTEN Preis-Blocks = primaere Preiskomponente
-    des Hauptprodukts. `schemaPriceInCents` spiegelt den aktiven Preis wider (bei
-    Sale = redPrice, sonst blackPrice). None, wenn nicht gefunden. Fuer Preisfilter."""
+    """Buy-Box-Preis (in Cent) = erster/primaerer Preis-Block der Seite.
+    Breuninger-Mechanik: gleiche Produktseite hat ZWEI Verkaeufer -- Breuninger-eigen
+    (guenstig, hier 69,99 EUR) und Partner/Marktplatz (adidas, hier 100 EUR). Ist
+    Breuninger selbst ausverkauft, gewinnt der Partner die Buy-Box (100 EUR); bekommt
+    Breuninger Nachschub, setzen sie ihr eigenes Angebot davor -> Buy-Box faellt auf
+    69,99 EUR. Beide Angebote sind IMMER im HTML (je 4 Render-Bloecke), aber der ERSTE
+    Block = die gewinnende Buy-Box. `schemaPriceInCents` = aktiver Preis. Damit erkennt
+    der Preisfilter den Verkaeufer-Wechsel auf Breuninger-eigen. None, wenn nicht gefunden."""
     m = re.search(
         r'"price":\{"blackPrice":"[^"]*?"(?:,"redPrice":"[^"]*?")?[^}]*?"schemaPriceInCents":(\d+)',
         ihtml.unescape(text),
