@@ -351,8 +351,8 @@ def run_once() -> None:
 def send_test() -> None:
     log("Sende Test-Push ...")
     ntfy_push(
-        title="KG2281 Cloud-Monitor laeuft",
-        message="✅ GitHub-Actions-Monitor ist live. Laeuft jetzt 24/7 alle ~5 Min, "
+        title="KG2281 Cloud-Monitor läuft",
+        message="✅ GitHub-Actions-Monitor ist live. Läuft jetzt 24/7 alle ~5 Min, "
                 "unabhaengig vom Mac. Ping kommt nur noch bei echtem Restock.",
         click_url="https://www.breuninger.com/de/marken/adidas/trainingsjacke-equipment-tt/1003077483/p/",
         priority="default",
