@@ -197,12 +197,7 @@ WANTED_SIZES = {"M", "L", "XL", "XXL"}
 # Temporaer stummgeschaltete Produkte: werden weiter geprueft (State bleibt aktuell),
 # aber KEIN ntfy-Push. Zum Reaktivieren einfach aus dem Set entfernen.
 # (WCC Jersey / Willy Chavarria bleibt BEWUSST aktiv.)
-MUTED_PRODUCTS = {
-    "DFB EQT Jacke (KG2281)",
-    "DE EQT T-Shirt grün",
-    "DE EQT T-Shirt schwarz",
-    "DE Aufwärmtrikot 2026 Heim",
-}
+MUTED_PRODUCTS = set()  # (leer) - die DFB-Produkte wurden 2026-07-05 ganz aus SHOPS entfernt
 
 
 def size_in_scope(variant_title: str, wanted=None) -> bool:
