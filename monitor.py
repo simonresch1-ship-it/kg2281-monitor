@@ -27,51 +27,7 @@ NTFY_TOPIC = os.environ.get("NTFY_TOPIC", "").strip()
 NTFY_URL = f"https://ntfy.sh/{NTFY_TOPIC}" if NTFY_TOPIC else ""
 
 SHOPS = [
-    {
-        "name": "Overkill",
-        "type": "shopify",
-        "fetch_url": "https://www.overkillshop.com/products/adidas-dfb-germany-equipment-track-top-kg2281-equipment-green.js",
-        "buy_url": "https://www.overkillshop.com/products/adidas-dfb-germany-equipment-track-top-kg2281-equipment-green",
-    },
-    {
-        "name": "Asphaltgold",
-        "type": "shopify",
-        "fetch_url": "https://www.asphaltgold.com/products/adidasdfb-germany-eqt-track-top-equipment-green.js",
-        "buy_url": "https://www.asphaltgold.com/de/products/adidasdfb-germany-eqt-track-top-equipment-green",
-    },
-    {
-        "name": "Schrittmacher",
-        "type": "shopify",
-        "fetch_url": "https://www.schrittmacher-shop.com/products/adidas-germany-eqt-track-top-equipment-green-kg2281.js",
-        "buy_url": "https://www.schrittmacher-shop.com/products/adidas-germany-eqt-track-top-equipment-green-kg2281",
-    },
-    {
-        "name": "Smart Dresser",
-        "type": "shopify",
-        "fetch_url": "https://www.thesmartdresser.de/products/dfb-eqt-tracktop-eqt-green.js",
-        "buy_url": "https://www.thesmartdresser.de/products/dfb-eqt-tracktop-eqt-green",
-    },
-    {
-        "name": "footdistrict",
-        "type": "shopify",
-        "fetch_url": "https://footdistrict.com/products/adidas-originals-eqt-germany-football-logo-relaxed-mens-track-jacket-kg2281.js",
-        "buy_url": "https://footdistrict.com/en/products/adidas-originals-eqt-germany-football-logo-relaxed-mens-track-jacket-kg2281",
-        "note": "⚠️ 2 Stück mitnehmen → Gratisversand (frei erst ab 180 €)",
-    },
-    {
-        "name": "Orange Jungle",
-        "type": "shopify",
-        "fetch_url": "https://www.orangejungle.de/products/dfb-equipment-track-top.js",
-        "buy_url": "https://www.orangejungle.de/products/dfb-equipment-track-top",
-        "note": "⚠️ 2 Stück mitnehmen → Gratisversand (frei erst ab 100 €, Jacke 99,99 €)",
-    },
-    {
-        "name": "Breuninger",
-        "type": "breuninger",
-        "fetch_url": "https://www.breuninger.com/de/marken/adidas/trainingsjacke-equipment-tt/1003077483/p/?variant=209ffbd7d7a540838023de0d0b3dc3f2",
-        "buy_url": "https://www.breuninger.com/de/marken/adidas/trainingsjacke-equipment-tt/1003077483/p/?variant=209ffbd7d7a540838023de0d0b3dc3f2",
-    },
-    # --- 2. Produkt: adidas x Willy Chavarria WCC Soccer Jersey (KU7803, gruen) ---
+    # --- adidas x Willy Chavarria WCC Soccer Jersey (KU7803, gruen) ---
     {
         "name": "Overkill",
         "product": "WCC Jersey (KU7803)",
@@ -87,35 +43,7 @@ SHOPS = [
         "buy_url": "https://footdistrict.com/en/products/adidas-originals-x-willy-chavarria-logo-half-sleeved-oversize-mens-jersey-t-shirt-ku7803",
         "note": "ℹ️ Versand frei ab 180 € — Jersey liegt bei 180 €, ggf. knapp drunter",
     },
-    # --- 3. Produkt: Deutschland Aufwaermtrikot 2026 Heim (nur Breuninger, M-XXL) ---
-    {
-        "name": "Breuninger",
-        "product": "DE Aufwärmtrikot 2026 Heim",
-        "type": "breuninger",
-        "sizes": ["XXL", "2XL"],
-        "fetch_url": "https://www.breuninger.com/de/marken/adidas/aufwaermtrikot-deutschland-2026-heim/1002965160/p/?variant=66c0629853c74b3999f5b88ccac325d1",
-        "buy_url": "https://www.breuninger.com/de/marken/adidas/aufwaermtrikot-deutschland-2026-heim/1002965160/p/?variant=66c0629853c74b3999f5b88ccac325d1",
-    },
-    # --- 4. Produkt: Deutschland EQT T-Shirt (nur Breuninger, ALLE Groessen, je Farbe getrennt) ---
-    {
-        "name": "Breuninger",
-        "product": "DE EQT T-Shirt grün",
-        "type": "breuninger",
-        "all_sizes": True,
-        "color_id": "eafa85cecb2747cca13a33e5e2744cab",
-        "fetch_url": "https://www.breuninger.com/de/marken/adidas/t-shirt-deutschland-eqt/1003077482/p/?variant=eafa85cecb2747cca13a33e5e2744cab",
-        "buy_url": "https://www.breuninger.com/de/marken/adidas/t-shirt-deutschland-eqt/1003077482/p/?variant=eafa85cecb2747cca13a33e5e2744cab",
-    },
-    {
-        "name": "Breuninger",
-        "product": "DE EQT T-Shirt schwarz",
-        "type": "breuninger",
-        "all_sizes": True,
-        "color_id": "11f97b976f934e28a3a14c445f1b93f7",
-        "fetch_url": "https://www.breuninger.com/de/marken/adidas/t-shirt-deutschland-eqt/1003077482/p/?variant=11f97b976f934e28a3a14c445f1b93f7",
-        "buy_url": "https://www.breuninger.com/de/marken/adidas/t-shirt-deutschland-eqt/1003077482/p/?variant=11f97b976f934e28a3a14c445f1b93f7",
-    },
-    # --- 5.+6. Produkt: adidas Mexico Trikots (nur Breuninger, einfarbig, ALLE Groessen) ---
+    # --- adidas Mexico Trikots (nur Breuninger, einfarbig, ALLE Groessen) ---
     {
         "name": "Breuninger",
         "product": "MEXICO Ausweichtrikot 2026",
