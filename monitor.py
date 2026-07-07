@@ -53,15 +53,7 @@ SHOPS = [
         "fetch_url": "https://www.breuninger.com/de/marken/adidas/ausweichtrikot-mexico-2026/1003241940/p/?variant=75b963d494f74f778a441c6da4baefed",
         "buy_url": "https://www.breuninger.com/de/marken/adidas/ausweichtrikot-mexico-2026/1003241940/p/?variant=75b963d494f74f778a441c6da4baefed",
     },
-    {
-        "name": "Breuninger",
-        "product": "MEXIKO Heimtrikot 26",
-        "type": "breuninger",
-        "all_sizes": True,
-        "fetch_url": "https://www.breuninger.com/de/marken/adidas/heimtrikot-mexiko-26/1002965118/p/?variant=78afb44479494b38bccc48582abf1779",
-        "buy_url": "https://www.breuninger.com/de/marken/adidas/heimtrikot-mexiko-26/1002965118/p/?variant=78afb44479494b38bccc48582abf1779",
-    },
-    # --- 7. Produkt: Mexiko Authentic Ausweichtrikot (nur XL/XXL/3XL) ---
+    # --- Mexiko Authentic Ausweichtrikot (nur XL/XXL/3XL) ---
     {
         "name": "Breuninger",
         "product": "MEXIKO 26 Authentic Ausweichtrikot",
