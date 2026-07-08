@@ -62,6 +62,16 @@ SHOPS = [
         "fetch_url": "https://www.breuninger.com/de/marken/adidas/mexiko-26-authentic-ausweichtrikot/1003382837/p/?variant=b140707b6a304942876a7abc3862c91d",
         "buy_url": "https://www.breuninger.com/de/marken/adidas/mexiko-26-authentic-ausweichtrikot/1003382837/p/?variant=b140707b6a304942876a7abc3862c91d",
     },
+    # --- UGG Tazz Plateau-Pantoletten, Farbe Taupe/Beige/Weiss (nur 37/38/39) ---
+    {
+        "name": "Breuninger",
+        "product": "UGG Tazz Taupe/Beige/Weiß",
+        "type": "breuninger",
+        "sizes": ["37", "38", "39"],
+        "color_id": "701e1ba26d534aad973c56c734fd1275",
+        "fetch_url": "https://www.breuninger.com/de/marken/ugg/plateau-pantoletten-tazz/1002822741/p/?variant=701e1ba26d534aad973c56c734fd1275",
+        "buy_url": "https://www.breuninger.com/de/marken/ugg/plateau-pantoletten-tazz/1002822741/p/?variant=701e1ba26d534aad973c56c734fd1275",
+    },
 ]
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
