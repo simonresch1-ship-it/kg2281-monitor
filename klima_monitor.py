@@ -254,7 +254,9 @@ def run_once():
     state = load_state()
     new_state = dict(state)
     check_obi(state, new_state)
-    check_toom(state, new_state)
+    # toom DEAKTIVIERT 13.07.2026 (User-Wunsch). Code + TOOM_PRODUCTS/TOOM_MARKETS bleiben stehen --
+    # zum Reaktivieren einfach die naechste Zeile wieder entkommentieren.
+    # check_toom(state, new_state)
     save_state(new_state)
 
 
