@@ -73,6 +73,16 @@ SHOPS = [
         "fetch_url": "https://www.breuninger.com/de/marken/ugg/plateau-pantoletten-tazz/1002822741/p/?variant=701e1ba26d534aad973c56c734fd1275",
         "buy_url": "https://www.breuninger.com/de/marken/ugg/plateau-pantoletten-tazz/1002822741/p/?variant=701e1ba26d534aad973c56c734fd1275",
     },
+    # --- adidas Audi F1 Team Sweatjacke (Breuninger, nur XL/XXL) -- 13.07.2026 (User) ---
+    {
+        "name": "Breuninger",
+        "product": "adidas Audi F1 Sweatjacke",
+        "type": "breuninger",
+        "sizes": ["XL", "XXL"],
+        "color_id": "1f47c8a0b0bc4f0183ce94da721aa9ed",
+        "fetch_url": "https://www.breuninger.com/de/marken/adidas/sweatjacke-audi-formula-one-team-engineers-marketing/1002952989/p/?variant=1f47c8a0b0bc4f0183ce94da721aa9ed",
+        "buy_url": "https://www.breuninger.com/de/marken/adidas/sweatjacke-audi-formula-one-team-engineers-marketing/1002952989/p/?variant=1f47c8a0b0bc4f0183ce94da721aa9ed",
+    },
 ]
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
