@@ -47,18 +47,19 @@ SHOPS = [
     {
         "name": "Breuninger",
         "product": "MEXICO Ausweichtrikot 2026",
+        # 13.07.2026 auf L/XL beschraenkt (User)
         "type": "breuninger",
-        "all_sizes": True,
+        "sizes": ["L", "XL"],
         "max_price_cents": 6999,  # nur pingen, wenn Buy-Box <= 69,99 EUR = Breuninger-eigen (nicht Partner-Angebot adidas 100 EUR)
         "fetch_url": "https://www.breuninger.com/de/marken/adidas/ausweichtrikot-mexico-2026/1003241940/p/?variant=75b963d494f74f778a441c6da4baefed",
         "buy_url": "https://www.breuninger.com/de/marken/adidas/ausweichtrikot-mexico-2026/1003241940/p/?variant=75b963d494f74f778a441c6da4baefed",
     },
-    # --- Mexiko Authentic Ausweichtrikot (nur XL/XXL/3XL) ---
+    # --- Mexiko Authentic Ausweichtrikot -- 13.07.2026 auf nur XL beschraenkt (User: L-XL; hat kein L) ---
     {
         "name": "Breuninger",
         "product": "MEXIKO 26 Authentic Ausweichtrikot",
         "type": "breuninger",
-        "sizes": ["XL", "XXL", "3XL"],
+        "sizes": ["XL"],
         "fetch_url": "https://www.breuninger.com/de/marken/adidas/mexiko-26-authentic-ausweichtrikot/1003382837/p/?variant=b140707b6a304942876a7abc3862c91d",
         "buy_url": "https://www.breuninger.com/de/marken/adidas/mexiko-26-authentic-ausweichtrikot/1003382837/p/?variant=b140707b6a304942876a7abc3862c91d",
     },
