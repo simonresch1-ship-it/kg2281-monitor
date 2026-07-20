@@ -210,7 +210,7 @@ WANTED_SIZES = {"M", "L", "XL", "XXL"}
 # Temporaer stummgeschaltete Produkte: werden weiter geprueft (State bleibt aktuell),
 # aber KEIN ntfy-Push. Zum Reaktivieren einfach aus dem Set entfernen.
 # (WCC Jersey / Willy Chavarria bleibt BEWUSST aktiv.)
-MUTED_PRODUCTS = set()  # (leer) - die DFB-Produkte wurden 2026-07-05 ganz aus SHOPS entfernt
+MUTED_PRODUCTS = {"UGG Tazz Taupe/Beige/Weiß"}  # 2026-07-20 stummgeschaltet (User); wird weiter geprueft, aber kein Push
 
 
 def size_in_scope(variant_title: str, wanted=None) -> bool:
